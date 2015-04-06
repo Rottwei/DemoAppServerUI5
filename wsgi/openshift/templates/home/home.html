@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta http-equiv='Content-Type' content='text/html;charset=UTF-8'/>
+		<script src="https://sapui5.netweaver.ondemand.com/sdk/resources/sap-ui-core.js"
+				id="sap-ui-bootstrap"
+				data-sap-ui-libs="sap.ui.commons,sap.ui.table"
+				data-sap-ui-theme="sap_bluecrystal">
+		</script>
+		<!-- add sap.ui.table,sap.ui.ux3 and/or other libraries to 'data-sap-ui-libs' if required -->
+		<script type="text/javascript">
+			var layout = new sap.ui.commons.layout.MatrixLayout();
+			layout.setLayoutFixed(false);
+			// create the uploader and disable the automatic upload
+			var oFileUploader = new sap.ui.commons.FileUploader({
+				name: "upload",
+				multiple: false,
+				maximumFileSize: 0.5,
+				mimeType: "text",
+				fileType: "txt",
+				uploadOnChange: false,
+				uploadUrl: "http://demoappserver-exaag.rhcloud.com/upload",
+				fileSizeExceed: function (oEvent) {
+				},
+				typeMissmatch: function (oEvent) {
+				},
+				uploadComplete: function (oEvent) {
+					var sResponse = oEvent.getParameter("response");
+					if (sResponse) {
+						var myarray = [];
+						var sRes = JSON.parse(sResponse);
+						var myJSON = "";
+						for (var i = 0; i < sRes.length; i++) {
+							var item = {
+								"amount": sRes[i],
+							};
+							myarray.push(item);
+						}
+						myJSON = JSON.stringify(myarray);
+					
+						var oModel = new sap.ui.model.json.JSONModel();
+						oModel.setData({modelData: JSON.parse(myJSON)});
+						oTable.setModel(oModel);
+						oTable.bindRows("/modelData");
+					}
+			}});
+			//Define some sample data 
+			var aData = [
+				{amount: "2000"}
+			];
+			//Create an instance of the table control
+			var oTable = new sap.ui.table.Table({
+				title: "Transaction Data",
+				visibleRowCount: 10,
+				firstVisibleRow: 3,
+				width: "500px",
+				selectionMode: sap.ui.table.SelectionMode.Single
+			});
+			//Define the columns and the control templates to be used
+			var oColumn = new sap.ui.table.Column({
+				label: new sap.ui.commons.Label({text: "Amount credited (INR)"}),
+				template: new sap.ui.commons.TextView().bindProperty("text", "amount"),
+				width: "200px"
+			});
+			oTable.addColumn(oColumn);
+			//Create a model and bind the table rows to this model
+			var oModel = new sap.ui.model.json.JSONModel();
+			oModel.setData({modelData: aData});
+			oTable.setModel(oModel);
+			oTable.bindRows("/modelData");
+			layout.createRow(oFileUploader);
+			// create a second button to trigger the upload
+			var oTriggerButton = new sap.ui.commons.Button({
+				text:'Upload',
+				press:function() {
+				// call the upload method
+				oFileUploader.upload();
+			}
+			});
+			layout.createRow(oTriggerButton);
+			layout.createRow(oTable);
+			layout.placeAt("content");
+		</script>
+	</head>
+	<body class="sapUiBody" role="application">
+		<h1> DemoApp Server </h1>
+		<div id="content"></div>{% csrf_token %}
+	</body>
+</html>
